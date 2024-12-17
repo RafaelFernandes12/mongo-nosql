@@ -8,9 +8,17 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "express": "^4.21.2",
-    "mongoose": "^8.8.4"
-  }
+    "mongoose": "^8.9.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RafaelFernandes12/mongo-nosql.git"
+  },
+  "bugs": {
+    "url": "https://github.com/RafaelFernandes12/mongo-nosql/issues"
+  },
+  "homepage": "https://github.com/RafaelFernandes12/mongo-nosql#readme",
+  "description": ""
 }

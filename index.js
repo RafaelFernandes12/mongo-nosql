@@ -12,24 +12,28 @@ mongoose.connect('mongodb://127.0.0.1:27017/users', {
 .then(() => console.log('Conexão com MongoDB bem-sucedida!'))
 .catch(err => console.error('Erro ao conectar ao MongoDB:', err));
 
-const userSchema = new mongoose.Schema({
-  name: String,
-  age: Number,
-});
 
-const User = mongoose.model('User', userSchema);
 
-app.post('/users', async (req, res) => {
+
+app.post('/:dynamic', async (req, res)=>{
+  const { dynamic } = req.params;
+  const collectionSchema = new mongoose.Schema(JSON.parse(req.body));
+  const User = mongoose.model({dynamic}, collectionSchema);
+
   try {
-    const { name, age } = req.body;
-    const user = new User({ name, age });
-    const savedUser = await user.save();
-    res.status(201).json(savedUser);
+    const everything = req.body;
+    const collection = new User(everything);
+    const savedCollection = await collection.save();
+
+
+    res.status(201).json(savedCollection);
+
   } catch (err) {
     console.error('Erro ao criar usuario:', err);
-    res.status(500).json({ error: 'Erro ao criar usuario' });
+    res.status(500).json({ error: 'Erro ao criar collection' });
   }
 });
+
 app.put('/users/:id', async (req, res) => {
   try {
     const { name, age } = req.body;
