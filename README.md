@@ -1,4 +1,4 @@
-#Passos para rodar o projeto
+## Passos para rodar o projeto
 
 `npm init -y`
 </br>
