@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.21.2",
-    "mongoose": "^8.9.1"
+    "mongoose": "^8.9.2"
   },
   "repository": {
     "type": "git",
@@ -20,5 +20,5 @@
     "url": "https://github.com/RafaelFernandes12/mongo-nosql/issues"
   },
   "homepage": "https://github.com/RafaelFernandes12/mongo-nosql#readme",
-  "description": ""
+  "description": "`npm init -y`\r </br>\r `npm install mongoose`\r </br>\r `docker run -p 27017:27017 --name nosql-mongo -v mongo-data:/data/ -d mongo`"
 }
