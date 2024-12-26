@@ -1,4 +1,5 @@
 const express = require('express');
+const req = require('express/lib/request');
 const mongoose = require('mongoose');
 
 const app = express();
@@ -61,13 +62,34 @@ app.get('/', async(req, res)=>{
       everyCollection = everyCollection + collectionsName[value].name + " "
     }
     res.send(everyCollection)
-    console.log(everyCollection)
+    console.log(collectionsName)
   }
   catch(error){
-    res.status(500).json({ error: 'Erro ao criar entidade'});
+    res.status(500).json({ error: 'Erro ao listar entidades do banco'});
     console.log('Erro ao listar entidades do banco');
   }
 })
+app.get('/:dynamic/:value', async(req, res)=>{
+  const{dynamic, value} =  req.params
+  const idSearched = await mongoose.connection.db.collection(dynamic).find().toArray()
+  try{
+    if(idSearched.length==0){
+      res.send("Coleção vazia")
+    }
+    else{
+      for(index in idSearched){
+        if(index+1==Number(value)){
+          console.log(idSearched[index])
+          res.send(idSearched[index])
+        }
+      }
+    }
+  }catch(error){
+    res.status(500).json({ error: 'Erro ao listar por id'});
+    console.log('Erro ao listar por id');
+  }
+})
+
 
 app.put('/users/:id', async (req, res) => {
   try {
