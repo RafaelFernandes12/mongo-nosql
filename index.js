@@ -70,39 +70,46 @@ app.get('/', async(req, res)=>{
 app.get('/:dynamic/:value', async(req, res)=>{
   try{
     const{dynamic, value} =  req.params
-    const idSearched = await mongoose.connection.db.collection(dynamic).find().toArray()
-    if(idSearched.length==0){
-      res.send("Coleção vazia")
+    let objectId = new mongoose.Types.ObjectId(value);
+    const idSearched = await mongoose.connection.db.collection(dynamic).findOne({_id: objectId})
+    if(idSearched == null){
+      res.send("Nenhum documento foi encontrado")
     }
     else{
-      for(index in idSearched){
-        if(index+1==Number(value)){
-          console.log(idSearched[index])
-          res.send(idSearched[index])
-        }
-      }
+      console.log(idSearched)
+      res.send(idSearched)
     }
   }catch(error){
     res.status(500).json({ error: 'Erro ao listar por id'});
-    console.log('Erro ao listar por id');
+    console.error(error);
   }
 })
 
 
-app.put('/users/:id', async (req, res) => {
+app.put('/:dynamic/:id', async (req, res) => {
+  const { dynamic, id } = req.params;
+
+  //extraindo os tipos do json da entidade criada
+  const schema = createDynamicSchema(req.body);
+  const collectionSchema = new mongoose.Schema(schema);
+  //books, {"name": "Poor things", "description": "an awesome book"}
+  const Entity = mongoose.model(`${dynamic}`, collectionSchema);
+
   try {
-    const { name, age } = req.body;
-    const foundUser = await User.findOne({ _id: req.params.id });
-    const newUser = new User({ name, age });
-    foundUser.name = newUser.name
-    foundUser.age = newUser.age
-    const savedUser = await foundUser.save();
-    res.status(201).json(savedUser);
+
+    const updatedObject = await Entity.findByIdAndUpdate(
+      id,
+      req.body
+    );
+
+    res.send("Documento atualizado" + updatedObject);
+    console.log("Documento atualizado" + updatedObject)
+
   } catch (err) {
-    console.error('Erro ao criar usuario:', err);
-    res.status(500).json({ error: 'Erro ao criar usuario' });
+    res.status(500).json({ error: 'Erro ao atualizar documento'});
+    console.error('Erro ao atualizar documento', err);
   }
-});
+})
 
 app.get('/:dynamic', async (req, res) => {
   try {
