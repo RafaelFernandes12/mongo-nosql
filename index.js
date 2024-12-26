@@ -18,7 +18,6 @@ function createDynamicSchema(jsonInput){
   const buildingDynamic = {}
   Object.keys(jsonInput).forEach(key =>{
     if(typeof jsonInput[key] == "string"){
-      console.log("a")
       buildingDynamic[key] = {type: String}
     }
     if(typeof jsonInput[key] == "number"){
@@ -33,7 +32,6 @@ app.post('/:dynamic', async (req, res)=>{
 
   //extraindo os tipos do json da entidade criada
   const schema = createDynamicSchema(req.body);
-  console.log(schema);
   const collectionSchema = new mongoose.Schema(schema);
   //books, {"name": "Poor things", "description": "an awesome book"}
   const Entity = mongoose.model(`${dynamic}`, collectionSchema);
@@ -55,9 +53,9 @@ app.post('/:dynamic', async (req, res)=>{
 });
 
 app.get('/', async(req, res)=>{
-  const collectionsName = await mongoose.connection.db.listCollections().toArray();
-  let everyCollection = "";
   try{
+    const collectionsName = await mongoose.connection.db.listCollections().toArray();
+    let everyCollection = "";
     for(value in collectionsName){
       everyCollection = everyCollection + collectionsName[value].name + " "
     }
@@ -70,9 +68,9 @@ app.get('/', async(req, res)=>{
   }
 })
 app.get('/:dynamic/:value', async(req, res)=>{
-  const{dynamic, value} =  req.params
-  const idSearched = await mongoose.connection.db.collection(dynamic).find().toArray()
   try{
+    const{dynamic, value} =  req.params
+    const idSearched = await mongoose.connection.db.collection(dynamic).find().toArray()
     if(idSearched.length==0){
       res.send("Coleção vazia")
     }
@@ -106,24 +104,31 @@ app.put('/users/:id', async (req, res) => {
   }
 });
 
-app.get('/users', async (req, res) => {
+app.get('/:dynamic', async (req, res) => {
   try {
+    const {dynamic} = req.params
     const query = req.query.query ? JSON.parse(req.query.query) : {};
-    const limit = parseInt(req.query.limit) || 10; // Limite padrão de 10
-    const skip = parseInt(req.query.skip) || 0
-    const users = await User.find(query).limit(limit).skip(skip);
-    const total = await User.countDocuments(query);
-    res.status(200).json({
-      data: users,
-      pagination: {
-          total,
-          limit,
-          skip,
-      },
-  });
-  } catch (err) {
-    console.error('Erro ao listar usuarios:', err);
-    res.status(500).json({ error: 'Erro ao listar usuarios' });
+    const limit = parseInt(req.query.limit) || 10; 
+    const skip = parseInt(req.query.skip) || 0;   
+
+    const buscaPaginada = await mongoose.connection.db.collection(dynamic)
+      .find(query)
+      .limit(limit)
+      .skip(skip)
+      .toArray();
+
+    if(buscaPaginada.length==0){
+      res.send("Nenhum elemento retornado")
+    }
+    else{
+      for(index in buscaPaginada){
+          console.log(buscaPaginada[index])
+          res.send(buscaPaginada[index])
+      }
+    }
+  }catch (err) {
+    res.status(500).json({err});
+    console.error(err);
   }
 });
 
