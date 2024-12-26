@@ -110,32 +110,81 @@ app.put('/:dynamic/:id', async (req, res) => {
     console.error('Erro ao atualizar documento', err);
   }
 })
+function createFieldsJson(fieldsInput){
+  //name, age => {fields: {name:1}, {age:1}}
+  //-name, age => {fields: {name:0}, {age:1}}
 
+  const list = fieldsInput.split(",")
+  const buildingFieldsJson = {projection:{}}
+  
+  for(value in list){
+    console.log(value)
+    if(list[value].indexOf("-")!=-1){
+      buildingFieldsJson.projection[list[value].substring(1,list[value].length)] = 0
+    }
+    else{
+      buildingFieldsJson.projection[list[value]] = 1
+    }
+  }
+  return buildingFieldsJson
+}
+//buscaPaginada ou Projeção
 app.get('/:dynamic', async (req, res) => {
-  try {
     const {dynamic} = req.params
-    const query = req.query.query ? JSON.parse(req.query.query) : {};
-    const limit = parseInt(req.query.limit) || 10; 
-    const skip = parseInt(req.query.skip) || 0;   
+    if(req.query.query == undefined){
 
-    const buscaPaginada = await mongoose.connection.db.collection(dynamic)
-      .find(query)
+      //retornando query com os fields a serem apresentados
+      const fields = req.query.fields;
+      const fieldsJson = createFieldsJson(fields)
+
+      const limit = parseInt(req.query.limit) || 10; 
+      const skip = parseInt(req.query.skip) || 0;
+
+      const projecao = await mongoose.connection.db.collection(dynamic)
+      .find({}, fieldsJson)      
       .limit(limit)
       .skip(skip)
       .toArray();
 
-    if(buscaPaginada.length==0){
-      res.send("Nenhum elemento retornado")
-    }
-    else{
-      for(index in buscaPaginada){
-          console.log(buscaPaginada[index])
-          res.send(buscaPaginada[index])
+      if(projecao.length==0){
+        res.send("Nenhum elemento retornado")
+      }
+      else{
+        const everyItem = []
+        for(index in projecao){
+            console.log(projecao[index])
+            everyItem.push(projecao[index])
+        }
+        res.send(everyItem)
       }
     }
-  }catch (err) {
-    res.status(500).json({err});
-    console.error(err);
+    else{
+      try{
+        const query = req.query.query ? JSON.parse(req.query.query) : {};
+        const limit = parseInt(req.query.limit) || 10; 
+        const skip = parseInt(req.query.skip) || 0;   
+    
+        const buscaPaginada = await mongoose.connection.db.collection(dynamic)
+          .find(query)
+          .limit(limit)
+          .skip(skip)
+          .toArray();
+    
+        if(buscaPaginada.length==0){
+          res.send("Nenhum elemento retornado")
+        }
+        else{
+          const everyItem = []
+          for(index in buscaPaginada){
+              console.log(buscaPaginada[index])
+              everyItem.push(buscaPaginada[index])
+          }
+          res.send(everyItem)
+        }
+      }catch (err) {
+      res.status(500).json({err});
+      console.error(err);
+    }
   }
 });
 
