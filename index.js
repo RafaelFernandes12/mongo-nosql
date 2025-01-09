@@ -50,22 +50,6 @@ app.post("/:dynamic", async (req, res) => {
   }
 });
 
-app.get("/", async (req, res) => {
-  try {
-    const collectionsName = await mongoose.connection.db
-      .listCollections()
-      .toArray();
-    let everyCollection = "";
-    for (value in collectionsName) {
-      everyCollection = everyCollection + collectionsName[value].name + " ";
-    }
-    res.send(everyCollection);
-    console.log(collectionsName);
-  } catch (error) {
-    res.status(500).json({ error: "Erro ao listar entidades do banco" });
-    console.log("Erro ao listar entidades do banco");
-  }
-});
 app.get("/:dynamic/:value", async (req, res) => {
   try {
     const { dynamic, value } = req.params;
@@ -124,10 +108,10 @@ function createFieldsJson(fieldsInput) {
   }
   return buildingFieldsJson;
 }
-//buscaPaginada ou Projeção
+//BuscadaPaginada, Projeção, Listar todas as entidades
 app.get("/:dynamic", async (req, res) => {
   const { dynamic } = req.params;
-  if (req.query.query == undefined) {
+  if (req.query.query == undefined && req.query.fields != undefined) {
     //retornando query com os fields a serem apresentados
     const fields = req.query.fields;
     const fieldsJson = createFieldsJson(fields);
@@ -152,7 +136,7 @@ app.get("/:dynamic", async (req, res) => {
       }
       res.send(everyItem);
     }
-  } else {
+  } if(req.query.fields == undefined && req.query.query != undefined) {
     try {
       const query = req.query.query ? JSON.parse(req.query.query) : {};
       const limit = parseInt(req.query.limit) || 10;
@@ -180,7 +164,30 @@ app.get("/:dynamic", async (req, res) => {
       console.error(err);
     }
   }
-});
+  if(req.query.fields == undefined && req.query.query == undefined){
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = parseInt(req.query.skip) || 0;
+
+    const buscaPaginada = await mongoose.connection.db
+      .collection(dynamic)
+      .find({})
+      .limit(limit)
+      .skip(skip)
+      .toArray();
+
+    if (buscaPaginada.length == 0) {
+      res.send("Nenhum elemento retornado");
+    } else {
+      const everyItem = [];
+      for (index in buscaPaginada) {
+        console.log(buscaPaginada[index]);
+        everyItem.push(buscaPaginada[index]);
+      }
+      res.send(everyItem);
+    }
+  }
+}
+);
 
 const port = 3000;
 app.listen(port, () => {
