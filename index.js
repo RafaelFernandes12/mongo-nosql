@@ -23,6 +23,18 @@ function createDynamicSchema(jsonInput) {
     if (typeof jsonInput[key] == "number") {
       buildingDynamic[key] = Number;
     }
+    if (typeof jsonInput[key] == "boolean") {
+      buildingDynamic[key] = Boolean;
+    }
+    if (Array.isArray(jsonInput[key])) {
+      buildingDynamic[key] = {
+        type: Array,
+        items: createDynamicSchema(jsonInput[key][0]) 
+      };
+    }
+    if (typeof jsonInput[key] == "object" && !Array.isArray(jsonInput[key])) {
+      buildingDynamic[key] = { type: Object, properties: createDynamicSchema(jsonInput[key]) };
+    }
   });
   return buildingDynamic;
 }
